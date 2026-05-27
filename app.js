@@ -110,6 +110,11 @@ function switchView(view, el) {
     STATE.map.invalidateSize();
   }
 
+  // Rafraîchir le tableau si on arrive sur cet onglet
+  if (view === 'table') {
+    updateTable();
+  }
+
   // Fermer sidebar mobile
   document.getElementById('sidebar').classList.remove('open');
 }
@@ -809,7 +814,7 @@ function updateTable() {
   document.getElementById('tableBody').innerHTML = page.map(r => {
     const dt = r._submission_time ? new Date(r._submission_time).toLocaleDateString('fr') : '—';
     const region = REGIONS[r.region] || r.region || '—';
-    const sec = r.section ? SECTIONS[r.section] : '—';
+    const secLabel = SECTIONS[r.section] || r.section || '—';
     const secKey = r.section || '';
     return `
       <tr>
@@ -820,7 +825,7 @@ function updateTable() {
         <td>${r.prefecture || '—'}</td>
         <td>${r.commune || '—'}</td>
         <td><span style="font-family:var(--font-mono);font-size:12px">${r.BV || '—'}</span></td>
-        <td><span class="td-badge ${sectionBadge[secKey] || ''}">${sec.replace('Section ', 'S')}</span></td>
+        <td><span class="td-badge ${sectionBadge[secKey] || ''}">${secLabel.replace('Section ', 'S')}</span></td>
         <td><button class="btn-detail" onclick="openDetail(${r._id || 0})">Voir</button></td>
       </tr>
     `;
@@ -1120,6 +1125,11 @@ function showToast(msg, type = 'info') {
   if (f) document.getElementById('apiFormId').value = f;
   if (t && f) STATE.apiToken = t, STATE.apiServer = s || 'https://kf.kobotoolbox.org', STATE.apiFormId = f;
 })();
+
+// Chargement automatique au démarrage si les identifiants sont disponibles
+if (STATE.apiToken && STATE.apiFormId) {
+  fetchData();
+}
 
 // CSS animation pour refresh
 const style = document.createElement('style');
