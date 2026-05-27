@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UMP 2026 — Dashboard Électoral</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- App Styles -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <img class="logo-image" src="logo.jpg" alt="UMP 2026 logo">
+    <div>
+      <div class="logo-title">UMP 2026</div>
+      <div class="logo-sub">Village Électoral - UMP</div>
+    </div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-section">Analyse</div>
+    <div class="nav-item active" data-view="overview" onclick="switchView('overview', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Vue d'ensemble
+    </div>
+    <div class="nav-item" data-view="map" onclick="switchView('map', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      Carte des BV
+    </div>
+    <div class="nav-item" data-view="results" onclick="switchView('results', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Résultats du Scrutin
+    </div>
+    <div class="nav-item" data-view="incidents" onclick="switchView('incidents', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Incidents
+      <span class="nav-badge" id="badge-incidents">0</span>
+    </div>
+    <div class="nav-section">Terrain</div>
+    <div class="nav-item" data-view="observers" onclick="switchView('observers', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Agents Observateurs
+    </div>
+    <div class="nav-item" data-view="table" onclick="switchView('table', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+      Données Brutes
+    </div>
+    <div class="nav-section">Système</div>
+    <div class="nav-item" data-view="api" onclick="switchView('api', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Connexion API
+    </div>
+  </div>
+
+  <div class="sidebar-status">
+    <div class="status-dot" id="statusDot"></div>
+    <div>
+      <div class="status-label" id="statusLabel">Non connecté</div>
+      <div class="status-count" id="statusCount">0 soumissions</div>
+    </div>
+    <button class="refresh-btn" id="refreshBtn" onclick="fetchData()" title="Actualiser">↻</button>
+  </div>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<div id="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-title" id="viewTitle">Vue d'ensemble</div>
+    <input class="search-input" type="text" placeholder="🔍 Rechercher…" oninput="handleSearch(this.value)">
+    <div class="topbar-actions" style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-ghost" onclick="exportCSV()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export CSV</span>
+      </button>
+      <div class="update-pill" id="lastUpdate">—</div>
+    </div>
+  </div>
+
+  <!-- Page content -->
+  <div class="page-content">
+
+    <!-- ── VIEW: OVERVIEW ── -->
+    <div class="view active" id="view-overview">
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-icon">📋</div>
+          <div class="kpi-val" id="kpi-total">—</div>
+          <div class="kpi-label">Total soumissions</div>
+        </div>
+        <div class="kpi-card kpi-green">
+          <div class="kpi-icon">🗳️</div>
+          <div class="kpi-val" id="kpi-bv">—</div>
+          <div class="kpi-label">Bureaux de vote</div>
+        </div>
+        <div class="kpi-card kpi-orange">
+          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-val" id="kpi-incidents">—</div>
+          <div class="kpi-label">Incidents signalés</div>
+        </div>
+        <div class="kpi-card kpi-purple">
+          <div class="kpi-icon">👥</div>
+          <div class="kpi-val" id="kpi-agents">—</div>
+          <div class="kpi-label">Agents déployés</div>
+        </div>
+        <div class="kpi-card kpi-teal">
+          <div class="kpi-icon">📊</div>
+          <div class="kpi-val" id="kpi-participation">—</div>
+          <div class="kpi-label">Participation moy.</div>
+        </div>
+        <div class="kpi-card kpi-red">
+          <div class="kpi-icon">🔒</div>
+          <div class="kpi-val" id="kpi-nonOpen">—</div>
+          <div class="kpi-label">BV non ouverts</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Répartition par Section</div>
+          </div>
+          <div class="chart-body"><canvas id="chartSections"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Soumissions par Région</div>
+          </div>
+          <div class="chart-body"><canvas id="chartRegions"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Heure d'Ouverture des BV</div>
+          </div>
+          <div class="chart-body"><canvas id="chartOpenHr"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Agents par Statut et Sexe</div>
+          </div>
+          <div class="chart-body"><canvas id="chartAgents"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: MAP ── -->
+    <div class="view" id="view-map">
+      <div class="map-controls">
+        <select class="map-filter" id="mapFilterRegion" onchange="filterMap()">
+          <option value="">Toutes les régions</option>
+          <option value="Boké">Boké</option>
+          <option value="Conakry">Conakry</option>
+          <option value="Faranah">Faranah</option>
+          <option value="Kankan">Kankan</option>
+          <option value="Kindia">Kindia</option>
+          <option value="Labé">Labé</option>
+          <option value="Mamou">Mamou</option>
+          <option value="Nzérékoré">Nzérékoré</option>
+        </select>
+        <select class="map-filter" id="mapFilterSection" onchange="filterMap()">
+          <option value="">Toutes les sections</option>
+          <option value="1">Section 1 — Ouverture</option>
+          <option value="2">Section 2 — Déroulement</option>
+          <option value="3">Section 3 — Clôture</option>
+          <option value="4">Section 4 — Incidents</option>
+        </select>
+        <div class="map-legend">
+          <div class="legend-item"><span class="dot dot-green"></span> Normal</div>
+          <div class="legend-item"><span class="dot dot-orange"></span> Incident</div>
+          <div class="legend-item"><span class="dot dot-red"></span> Critique</div>
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <!-- ── VIEW: RESULTS ── -->
+    <div class="view" id="view-results">
+      <div class="section-title">Résultats du Scrutin — Section 3 (Clôture)</div>
+      <div class="chart-card" style="margin-bottom:20px">
+        <div class="chart-header"><div class="chart-title">Votes par Parti (Top 12)</div></div>
+        <div class="chart-body" style="height:280px"><canvas id="chartResults"></canvas></div>
+      </div>
+      <div class="results-grid" id="resultsGrid">
+        <div class="empty-state">
+          <div class="empty-icon">📊</div>
+          <div>Chargez des données pour voir les résultats</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: INCIDENTS ── -->
+    <div class="view" id="view-incidents">
+      <div class="section-title">Grille des Incidents Signalés</div>
+      <div class="incidents-list" id="incidentsList">
+        <div class="empty-state">
+          <div class="empty-icon">✅</div>
+          <div>Aucun incident signalé</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: OBSERVERS ── -->
+    <div class="view" id="view-observers">
+      <div class="section-title">Agents Observateurs et Superviseurs</div>
+      <div class="observers-grid" id="observersGrid">
+        <div class="empty-state">
+          <div class="empty-icon">👥</div>
+          <div>Aucun agent enregistré</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: TABLE ── -->
+    <div class="view" id="view-table">
+      <div class="table-controls">
+        <div class="table-info" id="tableInfo">0 entrées</div>
+        <div class="table-filters">
+          <select class="map-filter" id="tableFilterRegion" onchange="filterTable()">
+            <option value="">Toutes les régions</option>
+          </select>
+          <select class="map-filter" id="tableFilterSection" onchange="filterTable()">
+            <option value="">Toutes les sections</option>
+            <option value="1">Section 1</option>
+            <option value="2">Section 2</option>
+            <option value="3">Section 3</option>
+            <option value="4">Section 4</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th onclick="sortTable('_submission_time')">Date ↕</th>
+              <th onclick="sortTable('noms')">Agent ↕</th>
+              <th>Statut</th>
+              <th onclick="sortTable('region')">Région ↕</th>
+              <th>Préfecture</th>
+              <th>Commune</th>
+              <th onclick="sortTable('BV')">Bureau ↕</th>
+              <th>Section</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted)">Chargez des données pour afficher le tableau</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- ── VIEW: API ── -->
+    <div class="view" id="view-api">
+      <div class="api-container">
+
+        <div class="api-hero">
+          <div class="api-icon">🔌</div>
+          <h2>Connexion KoBoToolbox</h2>
+          <p>Connectez-vous à votre serveur KoBoToolbox pour importer les données en temps réel.</p>
+        </div>
+
+        <!-- Status -->
+        <div class="api-status-card" id="apiStatusCard" style="display:none">
+          <div class="api-status-header">
+            <div class="status-indicator" id="apiStatusIndicator"></div>
+            <div class="api-status-text" id="apiStatusText">—</div>
+          </div>
+        </div>
+
+        <!-- API Form -->
+        <div class="api-card">
+          <div class="api-field">
+            <label>Serveur KoBoToolbox</label>
+            <select class="api-input" id="apiServer">
+              <option value="https://kf.kobotoolbox.org">KoBoToolbox Global (kf.kobotoolbox.org)</option>
+              <option value="https://kobo.humanitarianresponse.info">OCHA (humanitarianresponse.info)</option>
+              <option value="custom">Serveur personnalisé…</option>
+            </select>
+          </div>
+
+          <div class="api-field" id="customServerField" style="display:none">
+            <label>URL du serveur personnalisé</label>
+            <input class="api-input" id="customServer" type="text" placeholder="https://votre-serveur.kobo.org">
+          </div>
+
+          <div class="api-field">
+            <label>Token API</label>
+            <div class="api-input-wrap">
+              <input class="api-input" id="apiToken" type="password" placeholder="Votre token KoBoToolbox…">
+              <button class="btn-icon" onclick="toggleToken()" title="Afficher/Masquer">👁</button>
+            </div>
+            <div class="api-hint">
+              Obtenez votre token : KoBoToolbox → Compte → Sécurité → API Token
+            </div>
+          </div>
+
+          <div class="api-field">
+            <label>Asset UID du formulaire</label>
+            <input class="api-input" id="apiFormId" type="text" placeholder="Ex: ab6ZkVGRpcwY6xPLipughH">
+            <div class="api-hint">Visible dans l'URL de votre formulaire KoBoToolbox</div>
+          </div>
+
+          <div class="api-field">
+            <label>Actualisation automatique</label>
+            <select class="api-input" id="autoRefresh">
+              <option value="0">Désactivée</option>
+              <option value="30">Toutes les 30 secondes</option>
+              <option value="60" selected>Toutes les minutes</option>
+              <option value="300">Toutes les 5 minutes</option>
+              <option value="600">Toutes les 10 minutes</option>
+            </select>
+          </div>
+
+          <div class="api-actions">
+            <button class="btn btn-primary" onclick="connectAPI()">
+              ⚡ Connecter et importer
+            </button>
+            <button class="btn btn-ghost" onclick="importJSON()">
+              📂 Importer fichier local (JSON/CSV)
+            </button>
+            <button class="btn btn-ghost" onclick="loadDemoData()">
+              🎲 Données de démonstration
+            </button>
+          </div>
+
+          <input type="file" id="fileImport" accept=".json,.csv" style="display:none" onchange="handleFileImport(event)">
+        </div>
+
+        <!-- Guide -->
+        <div class="api-docs">
+          <div class="api-docs-title">📖 Comment obtenir vos identifiants</div>
+          <div class="api-step">
+            <div class="step-num">1</div>
+            <div>Connectez-vous sur <strong>kf.kobotoolbox.org</strong> avec votre compte.</div>
+          </div>
+          <div class="api-step">
+            <div class="step-num">2</div>
+            <div>Cliquez sur votre nom d'utilisateur en haut à droite → <strong>Paramètres du compte</strong>.</div>
+          </div>
+          <div class="api-step">
+            <div class="step-num">3</div>
+            <div>Dans l'onglet <strong>Sécurité</strong>, copiez votre <strong>clé API (Token)</strong>.</div>
+          </div>
+          <div class="api-step">
+            <div class="step-num">4</div>
+            <div>Ouvrez votre formulaire → l'<strong>Asset UID</strong> est dans l'URL :<br>
+              <code style="font-family:var(--font-mono);font-size:11px;color:var(--accent2)">
+                /forms/<strong>[ASSET_UID]</strong>/summary
+              </code>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+</div><!-- /main -->
+
+<!-- ══ MODAL DÉTAIL ══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Détail</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast"></div>
+
+<!-- App Logic -->
+<script src="app.js"></script>
+
+</body>
+</html>

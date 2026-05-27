@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion UMP 2026</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --accent: #ffd700;
+      --accent-strong: #00a651;
+      --border: rgba(0, 0, 0, 0.08);
+      --shadow: 0 32px 80px rgba(0, 0, 0, 0.45);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(0,0,0,0.6)),
+                  url('logo.jpg') center/cover no-repeat fixed;
+      color: #f8f8f8;
+      font-family: var(--font);
+      text-rendering: optimizeLegibility;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(255,215,0,0.18), transparent 24%),
+                  radial-gradient(circle at 80% 10%, rgba(0,166,81,0.18), transparent 22%);
+      pointer-events: none;
+    }
+
+    .login-card {
+      position: relative;
+      width: min(420px, calc(100% - 32px));
+      padding: 40px 36px 32px;
+      background: rgba(255,255,255,0.98);
+      border: 2px solid var(--accent);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      z-index: 1;
+      text-align: center;
+    }
+
+    .brand-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .brand-badge {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #0f2a16;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      font-weight: 800;
+      box-shadow: 0 16px 36px rgba(255,215,0,0.25);
+    }
+
+    .brand-info {
+      display: grid;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: 0.08em;
+      color: #111111;
+    }
+
+    .brand-subtitle {
+      margin: 0;
+      font-size: 0.86rem;
+      color: rgba(17,17,17,0.65);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .login-description {
+      margin: 0 0 28px;
+      color: rgba(17,17,17,0.72);
+      line-height: 1.6;
+      font-size: 0.96rem;
+      text-align: center;
+    }
+
+    .login-form {
+      display: grid;
+      gap: 16px;
+    }
+
+    label {
+      font-size: 0.88rem;
+      color: var(--accent);
+      font-weight: 700;
+      display: block;
+      text-align: left;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(17,17,17,0.12);
+      font-size: 0.98rem;
+      background: rgba(255,255,255,0.94);
+      color: #111111;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    input:focus {
+      border-color: var(--accent-strong);
+      box-shadow: 0 0 0 4px rgba(0,166,81,0.12);
+    }
+
+    .login-action {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 6px;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px 16px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 32px rgba(255,215,0,0.3);
+    }
+
+    .hint {
+      color: rgba(17,17,17,0.65);
+      font-size: 0.86rem;
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    .hint strong {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .error {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(239,68,68,0.12);
+      color: #b91c1c;
+      border: 1px solid rgba(239,68,68,0.18);
+      font-size: 0.92rem;
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 28px 22px 24px;
+      }
+      .brand-block {
+        gap: 12px;
+      }
+      .brand-badge {
+        width: 48px;
+        height: 48px;
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="login-card">
+    <div class="brand-block">
+      <div class="brand-badge">UMP</div>
+      <div class="brand-info">
+        <h1 class="brand-title">Connexion UMP 2026</h1>
+        <p class="brand-subtitle">Accès sécurisé au dashboard</p>
+      </div>
+    </div>
+
+    <p class="login-description">Veuillez saisir votre nom d'utilisateur et votre mot de passe pour accéder au tableau de bord électoral.</p>
+
+    <div id="errorMessage" class="error">Nom d'utilisateur ou mot de passe incorrect.</div>
+
+    <form id="loginForm" class="login-form" onsubmit="return authenticate(event)">
+      <div>
+        <label for="username">Nom d'utilisateur</label>
+        <input id="username" name="username" type="text" autocomplete="username" required>
+      </div>
+      <div>
+        <label for="password">Mot de passe</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="login-action">
+        <button type="submit" class="btn-login">Se connecter</button>
+      </div>
+    </form>
+
+    <p class="hint">Utilisateur de démonstration : <strong>ump</strong> / <strong>2026</strong></p>
+  </main>
+
+  <script>
+    function authenticate(event) {
+      event.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorMessage = document.getElementById('errorMessage');
+      const validUsername = 'ump';
+      const validPassword = '2026';
+
+      if (username === validUsername && password === validPassword) {
+        errorMessage.style.display = 'none';
+        window.location.href = 'index.html';
+        return true;
+      }
+
+      errorMessage.style.display = 'block';
+      return false;
+    }
+  </script>
+</body>
+</html>
